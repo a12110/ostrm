@@ -56,6 +56,12 @@ public class MediaScrapingHandler implements FileProcessorHandler {
         return ProcessingResult.SKIPPED;
       }
 
+      if (!Boolean.TRUE.equals(context.getTaskConfig().getNeedScrap())) {
+        log.debug("当前任务未开启需要刮削，跳过: {}", context.getBaseFileName());
+        context.getStats().incrementSkipped();
+        return ProcessingResult.SKIPPED;
+      }
+
       // 检查 TMDB API Key
       if (!isTmdbConfigured(context)) {
         log.warn("TMDB API Key 未配置，跳过刮削");

@@ -129,6 +129,7 @@ public class TaskConfigService {
 
     // 设置默认值
     setDefaultValues(taskConfig);
+    normalizeScrapingOptions(taskConfig);
 
     int result = taskConfigMapper.insert(taskConfig);
     if (result <= 0) {
@@ -185,6 +186,12 @@ public class TaskConfigService {
         throw new BusinessException("任务路径已存在: " + taskConfig.getPath());
       }
     }
+
+    Boolean effectiveNeedScrap =
+        taskConfig.getNeedScrap() != null
+            ? taskConfig.getNeedScrap()
+            : existingConfig.getNeedScrap();
+    normalizeScrapingOptions(taskConfig, effectiveNeedScrap);
 
     int result = taskConfigMapper.updateById(taskConfig);
     if (result <= 0) {
@@ -378,6 +385,9 @@ public class TaskConfigService {
     if (taskConfig.getNeedScrap() == null) {
       taskConfig.setNeedScrap(false);
     }
+    if (taskConfig.getRescanStrmAfterScraping() == null) {
+      taskConfig.setRescanStrmAfterScraping(false);
+    }
     if (taskConfig.getRenameRegex() == null) {
       taskConfig.setRenameRegex("");
     }
@@ -395,6 +405,16 @@ public class TaskConfigService {
     }
     if (taskConfig.getIsActive() == null) {
       taskConfig.setIsActive(true);
+    }
+  }
+
+  private void normalizeScrapingOptions(TaskConfig taskConfig) {
+    normalizeScrapingOptions(taskConfig, taskConfig.getNeedScrap());
+  }
+
+  private void normalizeScrapingOptions(TaskConfig taskConfig, Boolean effectiveNeedScrap) {
+    if (!Boolean.TRUE.equals(effectiveNeedScrap)) {
+      taskConfig.setRescanStrmAfterScraping(false);
     }
   }
 }

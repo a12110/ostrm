@@ -31,6 +31,9 @@ public class TaskConfig {
   /** 是否需要刮削：true-是，false-否 */
   private Boolean needScrap;
 
+  /** 刮削后是否再次遍历 STRM 目录：true-是，false-否 */
+  private Boolean rescanStrmAfterScraping;
+
   /** 重命名正则表达式，为空时表示不需要重命名 */
   private String renameRegex;
 

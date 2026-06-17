@@ -9,6 +9,7 @@
         <result column="path" property="path" jdbcType="VARCHAR"/>
         <result column="openlist_config_id" property="openlistConfigId" jdbcType="BIGINT"/>
         <result column="need_scrap" property="needScrap" jdbcType="BOOLEAN"/>
+        <result column="rescan_strm_after_scraping" property="rescanStrmAfterScraping" jdbcType="BOOLEAN"/>
         <result column="rename_regex" property="renameRegex" jdbcType="VARCHAR"/>
         <result column="cron" property="cron" jdbcType="VARCHAR"/>
         <result column="is_increment" property="isIncrement" jdbcType="BOOLEAN"/>
@@ -21,7 +22,7 @@
 
     <!-- 基础字段 -->
     <sql id="Base_Column_List">
-        id, task_name, path, openlist_config_id, need_scrap, rename_regex, cron, is_increment, strm_path, last_exec_time, created_at, updated_at, is_active
+        id, task_name, path, openlist_config_id, need_scrap, rescan_strm_after_scraping, rename_regex, cron, is_increment, strm_path, last_exec_time, created_at, updated_at, is_active
     </sql>
 
     <!-- 根据ID查询 -->
@@ -92,6 +93,9 @@
             <if test="needScrap != null">
                 need_scrap,
             </if>
+            <if test="rescanStrmAfterScraping != null">
+                rescan_strm_after_scraping,
+            </if>
             <if test="renameRegex != null">
                 rename_regex,
             </if>
@@ -123,6 +127,9 @@
             </if>
             <if test="needScrap != null">
                 #{needScrap},
+            </if>
+            <if test="rescanStrmAfterScraping != null">
+                #{rescanStrmAfterScraping},
             </if>
             <if test="renameRegex != null">
                 #{renameRegex},
@@ -160,6 +167,9 @@
             </if>
             <if test="needScrap != null">
                 need_scrap = #{needScrap},
+            </if>
+            <if test="rescanStrmAfterScraping != null">
+                rescan_strm_after_scraping = #{rescanStrmAfterScraping},
             </if>
             <if test="renameRegex != null">
                 rename_regex = #{renameRegex},

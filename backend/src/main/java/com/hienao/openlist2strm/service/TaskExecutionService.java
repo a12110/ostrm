@@ -50,6 +50,7 @@ public class TaskExecutionService {
   private final OpenlistApiService openlistApiService;
   private final StrmFileService strmFileService;
   private final MediaScrapingService mediaScrapingService;
+  private final StrmRescanService strmRescanService;
   private final SystemConfigService systemConfigService;
   private final FileProcessorChain fileProcessorChain;
   private final Executor taskSubmitExecutor;
@@ -289,6 +290,14 @@ public class TaskExecutionService {
               openlistConfig);
       log.info("清理了 {} 个孤立的STRM文件", cleanedCount);
     }
+
+    // 9. 按任务配置在刮削流程结束后再次遍历 STRM 目录
+    if (needScrap
+        && Boolean.TRUE.equals(scrapingConfig.getOrDefault("enabled", true))
+        && Boolean.TRUE.equals(taskConfig.getRescanStrmAfterScraping())) {
+      log.info("任务开启刮削后再次遍历STRM，开始扫描: {}", taskConfig.getStrmPath());
+      strmRescanService.rescanStrmDirectory(taskConfig.getStrmPath());
+    }
   }
 
   /** 创建单个文件的处理上下文 */
@@ -326,6 +335,13 @@ public class TaskExecutionService {
                 })
             .toList();
 
+    java.util.HashMap<String, Object> attributes =
+        scrapingConfig != null
+            ? new java.util.HashMap<>(scrapingConfig)
+            : new java.util.HashMap<>();
+    attributes.put("discoveredFiles", directoryFiles);
+    attributes.put("originalFiles", directoryFiles);
+
     return FileProcessingContext.builder()
         .openlistConfig(openlistConfig)
         .taskConfig(parentContext.getTaskConfig())
@@ -334,10 +350,7 @@ public class TaskExecutionService {
         .saveDirectory(saveDirectory)
         .baseFileName(baseFileName)
         .directoryFiles(currentDirFiles)
-        .attributes(
-            scrapingConfig != null
-                ? new java.util.HashMap<>(scrapingConfig)
-                : new java.util.HashMap<>())
+        .attributes(attributes)
         .build();
   }
 

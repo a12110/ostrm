@@ -32,6 +32,9 @@ public class TaskConfigDto {
   /** 是否需要刮削：true-需要，false-不需要 */
   private Boolean needScrap;
 
+  /** 刮削后是否再次遍历 STRM 目录：true-需要，false-不需要 */
+  private Boolean rescanStrmAfterScraping;
+
   /** 重命名正则表达式，为空时表示不需要重命名 */
   @Size(max = 500, message = "重命名正则表达式长度不能超过500个字符") private String renameRegex;
 

@@ -132,6 +132,10 @@
                 <input type="checkbox" :checked="task.needScrap" disabled class="mr-2 h-4 w-4 rounded border-white/20 bg-white/5 text-blue-500">
                 需要刮削
               </label>
+              <label v-if="task.needScrap" class="flex items-center text-sm text-white/60">
+                <input type="checkbox" :checked="task.rescanStrmAfterScraping" disabled class="mr-2 h-4 w-4 rounded border-white/20 bg-white/5 text-blue-500">
+                刮削后再次遍历STRM
+              </label>
               <label class="flex items-center text-sm text-white/60">
                 <input type="checkbox" :checked="task.isIncrement" disabled class="mr-2 h-4 w-4 rounded border-white/20 bg-white/5 text-blue-500">
                 增量更新
@@ -247,6 +251,14 @@
                   </span>
                 </label>
 
+                <label v-if="taskForm.needScrap" class="flex items-start cursor-pointer">
+                  <input v-model="taskForm.rescanStrmAfterScraping" type="checkbox" class="mt-1 h-4 w-4 rounded border-white/20 bg-white/5 text-blue-500">
+                  <span class="ml-2 text-sm text-white/70">
+                    刮削后再次遍历STRM
+                    <span class="block text-xs text-white/40 mt-0.5">任务刮削流程结束后，再扫描一次当前STRM输出目录</span>
+                  </span>
+                </label>
+
                 <label class="flex items-center cursor-pointer">
                   <input v-model="taskForm.isIncrement" type="checkbox" class="h-4 w-4 rounded border-white/20 bg-white/5 text-blue-500">
                   <span class="ml-2 text-sm text-white/70">增量更新</span>
@@ -319,7 +331,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import logger from '~/core/utils/logger'
 import { useRoute, useRouter } from 'vue-router'
 import { apiCall, authenticatedApiCall } from '~/core/api/client'
@@ -344,12 +356,22 @@ const taskForm = ref({
   strmPath: '/app/backend/strm',
   cron: '',
   needScrap: false,
+  rescanStrmAfterScraping: false,
   renameRegex: '',
   isIncrement: true,
   isActive: true
 })
 const strmSubPath = ref('')
 const showRenameRegexHelp = ref(false)
+
+watch(
+  () => taskForm.value.needScrap,
+  (needScrap) => {
+    if (!needScrap) {
+      taskForm.value.rescanStrmAfterScraping = false
+    }
+  }
+)
 
 const getConfigInfo = async () => {
   try {
@@ -383,7 +405,7 @@ const fetchTasks = async () => {
 const resetTaskForm = () => {
   taskForm.value = {
     taskName: '', path: '', strmPath: '/app/backend/strm', cron: '',
-    needScrap: false, renameRegex: '', isIncrement: true, isActive: true
+    needScrap: false, rescanStrmAfterScraping: false, renameRegex: '', isIncrement: true, isActive: true
   }
   strmSubPath.value = ''
   showRenameRegexHelp.value = false
@@ -391,9 +413,11 @@ const resetTaskForm = () => {
 
 const editTask = (task) => {
   editingTaskId.value = task.id
+  const needScrap = task.needScrap || false
   taskForm.value = {
     taskName: task.taskName, path: task.path, strmPath: task.strmPath,
-    cron: task.cron || '', needScrap: task.needScrap || false,
+    cron: task.cron || '', needScrap,
+    rescanStrmAfterScraping: needScrap ? task.rescanStrmAfterScraping || false : false,
     renameRegex: task.renameRegex || '', isIncrement: task.isIncrement, isActive: task.isActive
   }
   const prefix = '/app/backend/strm/'
@@ -420,6 +444,7 @@ const submitTask = async () => {
     if (taskForm.value.path) await validateTaskPath(taskForm.value.path)
     const fullStrmPath = '/app/backend/strm/' + (strmSubPath.value || '')
     const taskData = { ...taskForm.value, strmPath: fullStrmPath, openlistConfigId: parseInt(configId) }
+    if (!taskData.needScrap) taskData.rescanStrmAfterScraping = false
     let response
     if (showCreateTaskModal.value) {
       response = await authenticatedApiCall('/task-config', { method: 'POST', body: taskData })
